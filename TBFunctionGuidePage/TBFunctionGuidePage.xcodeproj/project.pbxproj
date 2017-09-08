@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		042BA96B1F618839003D2E75 /* FeatureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042BA96A1F618839003D2E75 /* FeatureHandler.swift */; };
+		042BA96B1F618839003D2E75 /* FeatureHandlerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042BA96A1F618839003D2E75 /* FeatureHandlerItem.swift */; };
 		042BA96D1F61885F003D2E75 /* GuidePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042BA96C1F61885F003D2E75 /* GuidePageView.swift */; };
 		046BCD3A1F602F7200EEB7A7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046BCD391F602F7200EEB7A7 /* AppDelegate.swift */; };
 		046BCD3C1F602F7200EEB7A7 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046BCD3B1F602F7200EEB7A7 /* ViewController.swift */; };
@@ -17,7 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		042BA96A1F618839003D2E75 /* FeatureHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeatureHandler.swift; sourceTree = "<group>"; };
+		042BA96A1F618839003D2E75 /* FeatureHandlerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeatureHandlerItem.swift; sourceTree = "<group>"; };
 		042BA96C1F61885F003D2E75 /* GuidePageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GuidePageView.swift; sourceTree = "<group>"; };
 		046BCD361F602F7200EEB7A7 /* TBFunctionGuidePage.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TBFunctionGuidePage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		046BCD391F602F7200EEB7A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -42,7 +42,7 @@
 		042BA9691F618818003D2E75 /* GuidePage */ = {
 			isa = PBXGroup;
 			children = (
-				042BA96A1F618839003D2E75 /* FeatureHandler.swift */,
+				042BA96A1F618839003D2E75 /* FeatureHandlerItem.swift */,
 				042BA96C1F61885F003D2E75 /* GuidePageView.swift */,
 			);
 			path = GuidePage;
@@ -152,7 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				042BA96D1F61885F003D2E75 /* GuidePageView.swift in Sources */,
-				042BA96B1F618839003D2E75 /* FeatureHandler.swift in Sources */,
+				042BA96B1F618839003D2E75 /* FeatureHandlerItem.swift in Sources */,
 				046BCD3C1F602F7200EEB7A7 /* ViewController.swift in Sources */,
 				046BCD3A1F602F7200EEB7A7 /* AppDelegate.swift in Sources */,
 			);
