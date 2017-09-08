@@ -153,11 +153,20 @@ extension UIView {
         self.guidePageContainerView = nil
     }
     
-    func touchedEvent(_ tap: UITapGestureRecognizer) {
+    @objc private func touchedEvent(_ tap: UITapGestureRecognizer) {
         if tap.state == .ended {
             self.dismiss()
         }
     }
+    
+    @objc private func focusActionButtonClick(_ sender: UIButton) {
+        
+    }
+    
+    @objc private func actionButtonClick(_ sender: UIButton) {
+        
+    }
+    
     
     //设置布局
     private func layoutSubviews(features: [[FeatureHandlerItem]]) {
@@ -170,40 +179,16 @@ extension UIView {
             return
         }
         
+        self.guidePageFeatures = features
+        
         let containerView: UIView = UIView(frame: (self.window?.bounds)!)
         containerView.backgroundColor = UIColor.clear
         self.guidePageContainerView = containerView
         self.window?.addSubview(self.guidePageContainerView!)
         
         //点击手势
-        let tap = UITapGestureRecognizer(target: self, action: #selector(touchedEvent))
+        let tap = UITapGestureRecognizer(target: self, action: #selector(touchedEvent(_:)))
         containerView.addGestureRecognizer(tap)
-        
-        /*
-         
-         UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0,0,self.window.bounds.size.width, self.window.bounds.size.height)cornerRadius:0];
-         
-         CAShapeLayer *shapeLayer = [CAShapeLayer layer];
-         
-         shapeLayer.path = path.CGPath;
-         shapeLayer.fillRule = kCAFillRuleEvenOdd;
-         shapeLayer.fillColor = [UIColor blackColor].CGColor;
-         shapeLayer.opacity =0.8;
-         
-         [containerView.layer addSublayer:shapeLayer];
-         
-         
-         NSMutableDictionary *actionDict = [NSMutableDictionary dictionary];
-         [self setButtonActionsDictionary:actionDict];
-         
-         [featureItems enumerateObjectsUsingBlock:^(EAFeatureItem * featureItem, NSUInteger idx, BOOL * _Nonnull stop) {
-         
-         actionDict[@(idx)] = [featureItem.action copy];
-         
-         [self layoutWithFeatureItem:featureItem];
-         
-         }];
-         */
         
         let path = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: (self.window?.frame.width)!, height: (self.window?.frame.size.height)!), cornerRadius: 0)
         
@@ -213,7 +198,6 @@ extension UIView {
         shapeLayer.fillColor = GuidePageLocalSet.fillColor
         shapeLayer.opacity = GuidePageLocalSet.opacity
         containerView.layer.addSublayer(shapeLayer)
-        
         
         features.forEach { (innerItems: [FeatureHandlerItem]) in
             innerItems.forEach({ (item) in
@@ -226,20 +210,98 @@ extension UIView {
     
     private func layout(featureHandlerItem: FeatureHandlerItem) {
         
+        let containerView = self.guidePageContainerView
+        //var indictorImageView: UIImageView?
+        var introduceView: UIView?
+        var button: UIButton?
+        
+        //绘制镂空高亮区域
+        var featureItemFrame = featureHandlerItem.focusView != nil ? featureHandlerItem.focusView?.convert((featureHandlerItem.focusView?.bounds)!, to: containerView) : featureHandlerItem.focusFrame
+        
+        
+        let shapeLayer = containerView?.layer.sublayers?.first as! CAShapeLayer
+        let bezierPath = UIBezierPath(cgPath: shapeLayer.path!)
+        
+        featureItemFrame?.origin.x += featureHandlerItem.focusInsets.left
+        featureItemFrame?.origin.y += featureHandlerItem.focusInsets.top
+        featureItemFrame?.size.width += featureHandlerItem.focusInsets.right - featureHandlerItem.focusInsets.left
+        featureItemFrame?.size.height += featureHandlerItem.focusInsets.bottom - featureHandlerItem.focusInsets.top
+        
+        bezierPath.append(UIBezierPath(roundedRect: featureItemFrame!, cornerRadius: featureHandlerItem.focusCornerRadius))
+        shapeLayer.path = bezierPath.cgPath
+        
+        //镂空区域添加操作按钮
+        let focusActionButton = UIButton(type: .custom)
+        focusActionButton.frame = featureItemFrame!
+        focusActionButton.backgroundColor = UIColor.clear
+        focusActionButton.addTarget(self, action: #selector(focusActionButtonClick(_:)), for: .touchUpInside)
+        containerView?.addSubview(focusActionButton)
+        
+        //根据配置信息增加介绍页和完成button
+        
+        //introduce
+        if let introduce = featureHandlerItem.introduce {
+            
+            guard let _ = featureHandlerItem.introduceFrame else {
+                return
+            }
+            
+            let frame = featureHandlerItem.introduceFrame!
+            
+            let type = featureHandlerItem.introduce?.components(separatedBy: ".").last?.lowercased()
+            if type == "png"
+                || type == "jpg"
+                || type == "jpeg" {
+                
+                //介绍页为图片
+                let introduceImage: UIImage = UIImage(named: introduce)!
+                let imageSize = featureItemFrame?.size
+                let imageView: UIImageView = UIImageView(frame: CGRect(x: frame.origin.x, y: frame.origin.y, width: (imageSize?.width)!, height: (imageSize?.height)!))
+                imageView.clipsToBounds = true
+                imageView.contentMode = .scaleAspectFit
+                imageView.image = introduceImage
+                introduceView = imageView
+                
+            } else {
+                
+                let introduceLabel = UILabel()
+                introduceLabel.backgroundColor = UIColor.clear
+                introduceLabel.numberOfLines = 0
+                introduceLabel.text = introduce
+                introduceLabel.font = featureHandlerItem.introduceFont
+                introduceLabel.textColor = featureHandlerItem.introduceTextColor
+                introduceLabel.frame = frame
+                introduceView = introduceLabel
+                
+            }
+            
+            containerView?.addSubview(introduceView!)
+        }
+        
+        //button
+        if let _ = featureHandlerItem.action {
+            
+            guard let _ = featureHandlerItem.buttonFrame else {
+                return
+            }
+            
+            let frame = featureHandlerItem.buttonFrame!
+            
+            button = UIButton(frame: frame)
+            if let imageName = featureHandlerItem.buttonBackgroundImageName {
+                let image: UIImage = (UIImage(named: imageName)?.resizableImage(withCapInsets: UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)))!
+                button?.setImage(image, for: .normal)
+            }
+            if let title = featureHandlerItem.buttonTitle {
+                button?.setTitle(title, for: .normal)
+            }
+            button?.sizeToFit()
+            button?.addTarget(self, action: #selector(actionButtonClick(_:)), for: .touchUpInside)
+            containerView?.addSubview(button!)
+            
+        }
+        
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
