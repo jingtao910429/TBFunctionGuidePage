@@ -20,6 +20,7 @@ enum AlignmentPriority {
 
 //布局元素显示类型
 enum FeatureType {
+    case none
     case all
     case noFocus
 }

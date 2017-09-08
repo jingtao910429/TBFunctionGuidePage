@@ -314,6 +314,8 @@ extension UIView {
                     if let buttonFrame = featureHandlerItem.buttonFrame {
                         positionY -= 2 * buttonFrame.size.height
                     }
+                case .none:
+                    break
                 }
                 
                 featureHandlerItem.introduceFrame?.origin.y = positionY
@@ -360,6 +362,8 @@ extension UIView {
                 frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height + 60
                 frame.origin.x = introduceFrame.origin.x - 10
                 frame.size.width = introduceFrame.size.width
+            case .none:
+                break
             }
             
             button = UIButton(frame: frame)
