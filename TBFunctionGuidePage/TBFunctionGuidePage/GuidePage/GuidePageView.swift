@@ -22,9 +22,10 @@ private struct GuidePageLocalSet {
 extension UIView {
     
     private struct GuidePageViewKeys {
-        static var guidePageNameKey = "UIView.GuidePageNameKey"
+        static var guidePageNameKey       = "UIView.GuidePageNameKey"
         static var guidePageContainerView = "UIView.GuidePageContainerView"
-        static var guidePageFeatures = "UIView.GuidePageFeatures"
+        static var guidePageFeatures      = "UIView.GuidePageFeatures"
+        static var guidePageShowIndex     = "UIView.GuidePageShowIndex"
         //屏幕旋转
         static var guidePageRotationOberserver = "UIView.GuidePageRotationOberserver"
     }
@@ -40,7 +41,7 @@ extension UIView {
                     self,
                     &GuidePageViewKeys.guidePageNameKey,
                     newValue as String?,
-                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+                    .OBJC_ASSOCIATION_COPY_NONATOMIC
                 )
             }
         }
@@ -57,7 +58,7 @@ extension UIView {
                     self,
                     &GuidePageViewKeys.guidePageContainerView,
                     newValue as UIView?,
-                    .OBJC_ASSOCIATION_COPY_NONATOMIC)
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
@@ -75,7 +76,22 @@ extension UIView {
                     self,
                     &GuidePageViewKeys.guidePageFeatures,
                     newValue as [[FeatureHandlerItem]]?,
-                    .OBJC_ASSOCIATION_COPY_NONATOMIC)
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+    }
+    
+    var guidePageShowIndex: Int? {
+        get {
+            return objc_getAssociatedObject(self, &GuidePageViewKeys.guidePageShowIndex) as? Int
+        }
+        set {
+            if let newValue = newValue {
+                objc_setAssociatedObject(
+                    self,
+                    &GuidePageViewKeys.guidePageShowIndex,
+                    newValue as Int?,
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
@@ -91,7 +107,7 @@ extension UIView {
                     self,
                     &GuidePageViewKeys.guidePageRotationOberserver,
                     newValue as Any?,
-                    .OBJC_ASSOCIATION_COPY_NONATOMIC)
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
@@ -109,8 +125,8 @@ extension UIView {
             return false
         }
         
-        if let result = defaults.object(forKey: UIView.keyCompent(key: key, version: version)) as? Bool{
-            return result
+        guard let _ = defaults.object(forKey: UIView.keyCompent(key: key, version: version)) else {
+            return false
         }
         
         return true
@@ -134,23 +150,40 @@ extension UIView {
     
     func show(features: [[FeatureHandlerItem]], key: String, version: String) {
         
-        if UIView.hasShow(key: key, version: version) || self.window == nil {
+        guard features.count != 0 else {
             return
         }
+        
+        if !UIView.hasShow(key: key, version: version) || self.window == nil {
+            return
+        }
+        
         self.dismiss()
         
-        self.layoutSubviews(features: features)
+        self.guidePageFeatures = features
+        self.guidePageShowIndex = 1
+        self.layoutSubviews(features: features.first!)
         
-        UIView.setStatus(key: UIView.keyCompent(key: key, version: version), isShow: true)
+        self.guidePageNameKey = UIView.keyCompent(key: key, version: version)
+        UIView.setStatus(key: self.guidePageNameKey!, isShow: true)
     }
     
     func dismiss() {
+        
         guard self.guidePageContainerView != nil, self.guidePageNameKey != nil else {
             return
         }
-        UIView.setStatus(key: self.guidePageNameKey!, isShow: true)
+        
         self.guidePageContainerView?.removeFromSuperview()
         self.guidePageContainerView = nil
+        
+        if self.guidePageShowIndex == self.guidePageFeatures?.count {
+            UIView.setStatus(key: self.guidePageNameKey!, isShow: true)
+        } else {
+            self.guidePageShowIndex = self.guidePageShowIndex! + 1
+            self.layoutSubviews(features: self.guidePageFeatures![self.guidePageShowIndex! - 1])
+        }
+        
     }
     
     @objc private func touchedEvent(_ tap: UITapGestureRecognizer) {
@@ -160,16 +193,21 @@ extension UIView {
     }
     
     @objc private func focusActionButtonClick(_ sender: UIButton) {
-        
+        if let action = sender.featureHandlerItem?.focusAction {
+            action(sender)
+        }
     }
     
     @objc private func actionButtonClick(_ sender: UIButton) {
+        dismiss()
         
+        if let action = sender.featureHandlerItem?.action {
+            action(sender)
+        }
     }
     
-    
     //设置布局
-    private func layoutSubviews(features: [[FeatureHandlerItem]]) {
+    private func layoutSubviews(features: [FeatureHandlerItem]) {
         
         guard features.count != 0 else {
             return
@@ -178,8 +216,6 @@ extension UIView {
         guard let _ = self.window?.bounds else {
             return
         }
-        
-        self.guidePageFeatures = features
         
         let containerView: UIView = UIView(frame: (self.window?.bounds)!)
         containerView.backgroundColor = UIColor.clear
@@ -199,21 +235,15 @@ extension UIView {
         shapeLayer.opacity = GuidePageLocalSet.opacity
         containerView.layer.addSublayer(shapeLayer)
         
-        features.forEach { (innerItems: [FeatureHandlerItem]) in
-            innerItems.forEach({ (item) in
-                self.layout(featureHandlerItem: item)
-            })
+        features.forEach { (item) in
+            self.layout(featureHandlerItem: item)
         }
-        
     }
     
     
     private func layout(featureHandlerItem: FeatureHandlerItem) {
         
         let containerView = self.guidePageContainerView
-        //var indictorImageView: UIImageView?
-        var introduceView: UIView?
-        var button: UIButton?
         
         //绘制镂空高亮区域
         var featureItemFrame = featureHandlerItem.focusView != nil ? featureHandlerItem.focusView?.convert((featureHandlerItem.focusView?.bounds)!, to: containerView) : featureHandlerItem.focusFrame
@@ -232,10 +262,19 @@ extension UIView {
         
         //镂空区域添加操作按钮
         let focusActionButton = UIButton(type: .custom)
+        focusActionButton.featureHandlerItem = featureHandlerItem
         focusActionButton.frame = featureItemFrame!
         focusActionButton.backgroundColor = UIColor.clear
         focusActionButton.addTarget(self, action: #selector(focusActionButtonClick(_:)), for: .touchUpInside)
         containerView?.addSubview(focusActionButton)
+        
+        layoutNormal(featureItemFrame: featureItemFrame!, featureHandlerItem: featureHandlerItem, containerView: containerView!)
+    }
+    
+    private func layoutNormal(featureItemFrame: CGRect, featureHandlerItem: FeatureHandlerItem, containerView: UIView) {
+        
+        var introduceView: UIView?
+        var button: UIButton?
         
         //根据配置信息增加介绍页和完成button
         
@@ -255,8 +294,33 @@ extension UIView {
                 
                 //介绍页为图片
                 let introduceImage: UIImage = UIImage(named: introduce)!
-                let imageSize = featureItemFrame?.size
-                let imageView: UIImageView = UIImageView(frame: CGRect(x: frame.origin.x, y: frame.origin.y, width: (imageSize?.width)!, height: (imageSize?.height)!))
+                let imageSize = introduceImage.size
+                
+                var width = frame.size.width
+                var height = frame.size.height
+                var positionY = frame.origin.y
+                
+                //根据类型进行页面调整,与业务有关
+                switch featureHandlerItem.featureType {
+                case .all:
+                    width = frame.size.width - frame.origin.x
+                    height = width * imageSize.height / imageSize.width
+                    positionY = featureItemFrame.origin.y - height
+                case .noFocus:
+                    
+                    height = width * imageSize.height / imageSize.width
+                    positionY = (UIScreen.main.bounds.height - height)/2.0
+                    
+                    if let buttonFrame = featureHandlerItem.buttonFrame {
+                        positionY -= 2 * buttonFrame.size.height
+                    }
+                }
+                
+                featureHandlerItem.introduceFrame?.origin.y = positionY
+                featureHandlerItem.introduceFrame?.size.width = width
+                featureHandlerItem.introduceFrame?.size.height = height
+                
+                let imageView: UIImageView = UIImageView(frame: featureHandlerItem.introduceFrame!)
                 imageView.clipsToBounds = true
                 imageView.contentMode = .scaleAspectFit
                 imageView.image = introduceImage
@@ -275,7 +339,7 @@ extension UIView {
                 
             }
             
-            containerView?.addSubview(introduceView!)
+            containerView.addSubview(introduceView!)
         }
         
         //button
@@ -285,26 +349,57 @@ extension UIView {
                 return
             }
             
-            let frame = featureHandlerItem.buttonFrame!
+            let introduceFrame = featureHandlerItem.introduceFrame!
+            
+            var frame = featureHandlerItem.buttonFrame!
+            
+            switch featureHandlerItem.featureType {
+            case .all:
+                frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height/2.0
+            case .noFocus:
+                frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height + 60
+                frame.origin.x = introduceFrame.origin.x - 10
+                frame.size.width = introduceFrame.size.width
+            }
             
             button = UIButton(frame: frame)
             if let imageName = featureHandlerItem.buttonBackgroundImageName {
-                let image: UIImage = (UIImage(named: imageName)?.resizableImage(withCapInsets: UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)))!
+                let image: UIImage = UIImage(named: imageName)!
                 button?.setImage(image, for: .normal)
             }
             if let title = featureHandlerItem.buttonTitle {
                 button?.setTitle(title, for: .normal)
             }
-            button?.sizeToFit()
+            button?.imageView?.contentMode = .scaleAspectFit
+            button?.featureHandlerItem = featureHandlerItem
             button?.addTarget(self, action: #selector(actionButtonClick(_:)), for: .touchUpInside)
-            containerView?.addSubview(button!)
+            containerView.addSubview(button!)
             
         }
-        
     }
     
     
     
+}
+
+extension UIButton {
     
+    private struct ButtonViewKeys {
+        static var FeatureHandlerItemKey       = "UIView.FeatureHandlerItemKey"
+    }
     
+    var featureHandlerItem: FeatureHandlerItem? {
+        get {
+            return objc_getAssociatedObject(self, &ButtonViewKeys.FeatureHandlerItemKey) as? FeatureHandlerItem
+        }
+        set {
+            if let newValue = newValue {
+                objc_setAssociatedObject(
+                    self,
+                    &ButtonViewKeys.FeatureHandlerItemKey,
+                    newValue as FeatureHandlerItem?,
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+    }
 }

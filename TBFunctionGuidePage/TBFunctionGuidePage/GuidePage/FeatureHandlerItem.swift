@@ -8,12 +8,20 @@
 
 import UIKit
 
-//单布局元素在界面上垂直居中时，是将介绍文案布局顶部，还是底部
+//单布局元素在界面上垂直居中时，是将介绍文案布局
 enum AlignmentPriority {
-    //顶部优先
-    case top
-    //底部优先
-    case bottom
+    //left优先
+    case left
+    //right优先
+    case right
+    //middle
+    case middle
+}
+
+//布局元素显示类型
+enum FeatureType {
+    case all
+    case noFocus
 }
 
 typealias HandlerAction = (_ sender: UIButton) -> Void
@@ -21,11 +29,13 @@ typealias HandlerFocusAction = (_ sender: UIButton) -> Void
 
 class FeatureHandlerItem: NSObject {
     
+    public var featureType: FeatureType = FeatureType.all
+    
     //镂空显示元素 - 两种呈现方式 View/Frame
     //高亮元素
     public var focusView: UIView?
     //高亮元素frame
-    public var focusFrame: CGRect?
+    public var focusFrame: CGRect = CGRect(x: 0, y: 0, width: 0, height: 0)
     //高亮元素圆角半径
     public var focusCornerRadius: CGFloat = 0
     //高亮元素Insets
@@ -58,15 +68,17 @@ class FeatureHandlerItem: NSObject {
     //视图显示优先顺序
     public var alignmentPriority: AlignmentPriority?
     
-    init(focusView: UIView?, focusCornerRadius: CGFloat = 0, focusInsets: UIEdgeInsets = UIEdgeInsets()) {
+    convenience init(focusView: UIView?, focusCornerRadius: CGFloat = 0, focusInsets: UIEdgeInsets = UIEdgeInsets()) {
+        self.init()
         self.focusView = focusView
         self.focusCornerRadius = focusCornerRadius
         self.focusInsets = focusInsets
     }
     
-    init(focusFrame: CGRect?, focusCornerRadius: CGFloat = 0, focusInsets: UIEdgeInsets = UIEdgeInsets()) {
-        self.focusFrame = focusFrame
+    convenience init(focusFrame: CGRect?, focusCornerRadius: CGFloat = 0, focusInsets: UIEdgeInsets = UIEdgeInsets()) {
+        self.init()
+        self.focusFrame = focusFrame!
         self.focusCornerRadius = focusCornerRadius
-        self.focusFrame = focusFrame
+        self.focusInsets = focusInsets
     }
 }
