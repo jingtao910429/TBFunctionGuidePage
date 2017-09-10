@@ -64,7 +64,7 @@ extension UIView {
     }
     
     //features集合
-    //features 功能引导集合 
+    //features 功能引导集合
     //组织形式 [[FeatureHandlerItem]], 一级表示同一页面功能分次序显示、二级描述同一页面同一次显示功能个数
     var guidePageFeatures: [[FeatureHandlerItem]]? {
         get {
@@ -154,7 +154,7 @@ extension UIView {
             return
         }
         
-        if !UIView.hasShow(key: key, version: version) || self.window == nil {
+        if UIView.hasShow(key: key, version: version) || self.window == nil {
             return
         }
         
@@ -293,6 +293,9 @@ extension UIView {
                 || type == "jpeg" {
                 
                 //介绍页为图片
+                guard let _ = UIImage(named: introduce) else {
+                    return
+                }
                 let introduceImage: UIImage = UIImage(named: introduce)!
                 let imageSize = introduceImage.size
                 
@@ -368,6 +371,9 @@ extension UIView {
             
             button = UIButton(frame: frame)
             if let imageName = featureHandlerItem.buttonBackgroundImageName {
+                guard let _ = UIImage(named: imageName) else {
+                    return
+                }
                 let image: UIImage = UIImage(named: imageName)!
                 button?.setImage(image, for: .normal)
             }
