@@ -28,6 +28,7 @@ class ViewController: UIViewController {
 
     func go() {
         
+        //根据配置设置功能引导，点击方法action存在与否决定button是否显示
         let noFocus: FeatureHandlerItem = FeatureHandlerItem()
         
         noFocus.featureType = .noFocus

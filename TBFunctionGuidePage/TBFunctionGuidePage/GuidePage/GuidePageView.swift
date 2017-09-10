@@ -308,7 +308,7 @@ extension UIView {
                 case .all:
                     width = frame.size.width - frame.origin.x
                     height = width * imageSize.height / imageSize.width
-                    positionY = featureItemFrame.origin.y - height
+                    positionY = featureItemFrame.origin.y - height - 20
                 case .noFocus:
                     
                     height = width * imageSize.height / imageSize.width
