@@ -19,6 +19,8 @@ private struct GuidePageLocalSet {
     static let fillColor = UIColor.black.cgColor
 }
 
+typealias GuidePageDismiss = () -> Void
+
 extension UIView {
     
     private struct GuidePageViewKeys {
@@ -26,6 +28,7 @@ extension UIView {
         static var guidePageContainerView = "UIView.GuidePageContainerView"
         static var guidePageFeatures      = "UIView.GuidePageFeatures"
         static var guidePageShowIndex     = "UIView.GuidePageShowIndex"
+        static var guidePageDismiss       = "UIView.GuidePageDismiss"
         //屏幕旋转
         static var guidePageRotationOberserver = "UIView.GuidePageRotationOberserver"
     }
@@ -111,6 +114,22 @@ extension UIView {
             }
         }
     }
+    
+    
+    var guidePageDismiss: GuidePageDismiss? {
+        get {
+            return objc_getAssociatedObject(self, &GuidePageViewKeys.guidePageDismiss) as? GuidePageDismiss
+        }
+        set {
+            if let newValue = newValue {
+                objc_setAssociatedObject(
+                    self,
+                    &GuidePageViewKeys.guidePageDismiss,
+                    newValue as GuidePageDismiss?,
+                    .OBJC_ASSOCIATION_COPY_NONATOMIC)
+            }
+        }
+    }
 }
 
 
@@ -154,12 +173,15 @@ extension UIView {
             return
         }
         
-        //UIView.hasShow(key: key, version: version) ||
-        if  self.window == nil {
+        if UIView.hasShow(key: key, version: version) || self.window == nil {
+            if let guidePageDismiss = self.guidePageDismiss {
+                guidePageDismiss()
+            }
             return
         }
         
-        self.dismiss()
+        self.guidePageContainerView?.removeFromSuperview()
+        self.guidePageContainerView = nil
         
         self.guidePageFeatures = features
         self.guidePageShowIndex = 1
@@ -180,6 +202,9 @@ extension UIView {
         
         if self.guidePageShowIndex == self.guidePageFeatures?.count {
             UIView.setStatus(key: self.guidePageNameKey!, isShow: true)
+            if let guidePageDismiss = self.guidePageDismiss {
+                guidePageDismiss()
+            }
         } else {
             self.guidePageShowIndex = self.guidePageShowIndex! + 1
             self.layoutSubviews(features: self.guidePageFeatures![self.guidePageShowIndex! - 1])
