@@ -20,9 +20,15 @@ enum AlignmentPriority {
 
 //布局元素显示类型
 enum FeatureType {
+    //不做控制
     case none
-    case all
+    //默认设置
+    case def
+    //无高亮
     case noFocus
+    
+    //业务相关、可以设置none直接通过item设置
+    case plate
 }
 
 typealias HandlerAction = (_ sender: UIButton) -> Void
@@ -30,7 +36,7 @@ typealias HandlerFocusAction = (_ sender: UIButton) -> Void
 
 class FeatureHandlerItem: NSObject {
     
-    public var featureType: FeatureType = FeatureType.all
+    public var featureType: FeatureType = FeatureType.def
     
     //镂空显示元素 - 两种呈现方式 View/Frame
     //高亮元素

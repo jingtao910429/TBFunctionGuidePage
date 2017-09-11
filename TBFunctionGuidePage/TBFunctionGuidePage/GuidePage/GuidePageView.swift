@@ -14,7 +14,7 @@ private let defaults = UserDefaults.standard
 
 private struct GuidePageLocalSet {
     //透明度
-    static let opacity = Float(0.8)
+    static let opacity = Float(0.7)
     //填充色
     static let fillColor = UIColor.black.cgColor
 }
@@ -154,7 +154,8 @@ extension UIView {
             return
         }
         
-        if UIView.hasShow(key: key, version: version) || self.window == nil {
+        //UIView.hasShow(key: key, version: version) ||
+        if  self.window == nil {
             return
         }
         
@@ -305,7 +306,7 @@ extension UIView {
                 
                 //根据类型进行页面调整,与业务有关
                 switch featureHandlerItem.featureType {
-                case .all:
+                case .def, .plate:
                     width = frame.size.width - frame.origin.x
                     height = width * imageSize.height / imageSize.width
                     positionY = featureItemFrame.origin.y - height - 20
@@ -359,8 +360,10 @@ extension UIView {
             var frame = featureHandlerItem.buttonFrame!
             
             switch featureHandlerItem.featureType {
-            case .all:
+            case .def:
                 frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height/2.0
+            case .plate:
+                frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height/2.0 + 60
             case .noFocus:
                 frame.origin.y = introduceFrame.origin.y + introduceFrame.size.height + 60
                 frame.origin.x = introduceFrame.origin.x - 10
